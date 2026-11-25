@@ -1,4 +1,4 @@
-# Deployment requires custom-domain verification before launch.
+# Uses Render's HTTPS service URL; custom domains are optional.
 services:
   - type: web
     name: dscribe-admissions
@@ -23,8 +23,6 @@ services:
         sync: false
       - key: DB_SSL_MODE
         value: VERIFY_IDENTITY
-      - key: APP_BASE_URL
-        sync: false
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD

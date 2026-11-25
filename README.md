@@ -2,10 +2,10 @@
 
 A staff workspace for adding patients, searching and filtering admissions, updating records, recording discharges, and deleting records with confirmation.
 
-**Submission status: not yet deployed.** The GitHub repository is configured below. The verified custom-domain live URL is still pending. Do not submit this project until the live URL is filled in and the launch checklist passes.
+**Submission status: not yet deployed.** The GitHub repository is configured below. The verified Render live URL is still pending. Do not submit this project until the live URL is filled in and the launch checklist passes.
 
 - **Public repository**: [Vignesh0406/Dscribe](https://github.com/Vignesh0406/Dscribe).
-- **Live application**: Pending Render deployment and custom-domain verification.
+- **Live application**: Pending Render deployment and hosted MySQL setup.
 - **Hosting target**: Render Docker web service connected to a hosted MySQL database.
 
 ## Tech stack
@@ -44,7 +44,7 @@ A staff workspace for adding patients, searching and filtering admissions, updat
 | Data survives server restart | Abrupt-restart persistence test passes locally |
 | Public GitHub repository | Available above |
 | README stack, run instructions, screenshots | Included |
-| Connected frontend/backend live link | **Pending Render deployment and custom domain** |
+| Connected frontend/backend live link | **Pending Render deployment and hosted MySQL** |
 | Submission email with full name and both links | **Pending live link and applicant full name** |
 
 Sign-in is an additional staff-access safeguard, not an assignment requirement. Reviewers will need credentials supplied privately, outside the public repository.
@@ -146,19 +146,23 @@ Actual local application screenshots at desktop, tablet, and mobile widths. All 
 
 ## Render deployment
 
-**Do not launch until your custom domain is connected and verified.** No deployment has been performed as part of this local implementation. The blueprint uses a free Render web service and expects an existing, reachable MySQL server. Database hosting may have a separate cost; confirm it before provisioning anything. Free Render web services can sleep when inactive.
+**Deployment will use Render's provided HTTPS URL.** A custom domain is optional, as requested. No deployment has been performed as part of this local implementation. The blueprint uses a free Render web service and expects an existing, reachable MySQL server. Database hosting may have a separate cost; confirm it before provisioning anything. Free Render web services can sleep when inactive.
 
 1. Create a public GitHub repository and push this project. Review staged changes to ensure there are no secrets or local databases.
 2. In Render, create a Blueprint from the repository using `.\render.yaml`. The web-service blueprint prompts for an external MySQL connection. No database or paid service is provisioned automatically. No email provider is required.
-3. Set the prompted `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `APP_BASE_URL`. Use the final HTTPS custom-domain origin, with no trailing slash. Also set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, and `DB_PASSWORD` from your hosted MySQL provider. Store them in Render, never in Git. `DB_SSL_MODE` defaults to `VERIFY_IDENTITY` in production; use a valid server certificate and your provider's trusted CA configuration. A database running on your laptop at `localhost` cannot be reached from Render.
-4. Add your domain in the Render service's Custom Domains settings. Configure the DNS records shown by Render. Wait for DNS verification and the HTTPS certificate before considering the application launched. The production startup check rejects localhost-style HTTP URLs and Render's default service domain, but it does not verify DNS ownership by itself.
-5. Keep automatic deploys off until launch readiness is verified. Render may create an initial service deployment while resources are provisioned; treat it as staging and do not share it as the live submission link. If you require absolutely no public staging endpoint, arrange domain settings and deployment access with Render before provisioning.
-6. Check `/api/health`, staff login, all patient actions, privacy/terms pages, and favicon on the custom domain. Create only clearly fictional test records, then remove them.
+3. Set the prompted `ADMIN_EMAIL` and `ADMIN_PASSWORD`. Also set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, and `DB_PASSWORD` from your hosted MySQL provider. Store them in Render, never in Git. `DB_SSL_MODE` defaults to `VERIFY_IDENTITY` in production; use a valid server certificate and your provider's trusted CA configuration. A database running on your laptop at `localhost` cannot be reached from Render.
+4. Use the HTTPS URL assigned by Render. The React frontend and Java API use same-origin relative paths, so no separate frontend/backend URL setting is needed. A custom domain can be added later, but is not required for this submission.
+5. Keep automatic deploys off until the database connection and launch checks pass. Do not share a failed or unverified deployment as the submission's live link.
+6. Check `/api/health`, staff login, all patient actions, privacy/terms pages, and favicon on the Render URL. Create only clearly fictional test records, then remove them.
 7. Create one fictional record, restart the Render service, and verify the record remains. MySQL must be configured in production; do not use ephemeral container H2 storage.
 8. Remove `ADMIN_PASSWORD` from Render after successful initial provisioning. The hashed account is stored in MySQL. Keep the database credentials in Render.
 9. Replace the pending repository/live fields at the top of this document. Recheck desktop, tablet, and mobile screenshots against the deployed app.
 
 See [Render Docker deployment](https://render.com/docs/docker), [Blueprint reference](https://render.com/docs/blueprint-spec), and [custom domains](https://render.com/docs/custom-domains).
+
+### Free demonstration database
+
+Clever Cloud documents a free DEV MySQL plan for testing, with limited resources and no backups or SLA. It is suitable only for fictional review data, not real patient records. Account signup and verification must be completed by the account owner. Verify the selected plan is free before creating the database and do not add paid resources without approval. See [the MySQL plan documentation](https://www.clever.cloud/developers/doc/deploy/databases/mysql/).
 
 ### MySQL hosting choices
 
@@ -177,7 +181,7 @@ See [Render Docker deployment](https://render.com/docs/docker), [Blueprint refer
 - The application has a same-origin content security policy and does not permit cross-origin embedding.
 - This internship project is **not certified for real patient information**. It lacks a clinical audit log, granular staff permissions, and a hospital-specific retention/consent policy. Use fictional records for review.
 - Privacy and terms content describes the actual demo behavior. Before clinical use, the operator must supply its identity, contact details, retention rules, and approved legal text.
-- The Render runtime, your MySQL connection, custom-domain DNS, and TLS require environment-specific verification. Do not represent them as verified before testing them.
+- The Render runtime, your MySQL connection, public HTTPS URL, and TLS require environment-specific verification. Do not represent them as verified before testing them.
 
 ## Code walkthrough
 
@@ -192,4 +196,4 @@ See [Render Docker deployment](https://render.com/docs/docker), [Blueprint refer
 
 ## Submission
 
-After all launch checks pass, email the **public GitHub repository URL** and **live custom-domain URL** to **pramod@dscribe.in** and **suhasm@dscribe.in**. Put your full name in the subject. The task deadline is **25 November 2026, 11:59 PM IST**. Because staff login is an additional feature, arrange reviewer access privately; never put a working staff password in the public repository.
+After all launch checks pass, email the **public GitHub repository URL** and **live Render URL** to **pramod@dscribe.in** and **suhasm@dscribe.in**. Put your full name in the subject. The task deadline is **25 November 2026, 11:59 PM IST**. Because staff login is an additional feature, arrange reviewer access privately; never put a working staff password in the public repository.

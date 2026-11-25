@@ -305,6 +305,20 @@ class AdmissionIntegrationTest {
   }
 
   @Test
+  void productionBootstrapDoesNotRequireACustomDomain() {
+    boolean originalProduction = accounts.production;
+    try {
+      accounts.production = true;
+      org.junit.jupiter.api.Assertions.assertDoesNotThrow(
+          () ->
+              accounts.run(
+                  new org.springframework.boot.DefaultApplicationArguments(new String[0])));
+    } finally {
+      accounts.production = originalProduction;
+    }
+  }
+
+  @Test
   void incorrectPasswordIsRejectedClearly() throws Exception {
     mvc.perform(
             post("/api/auth/login")

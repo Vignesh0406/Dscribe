@@ -42,9 +42,6 @@ public class AuthController implements ApplicationRunner {
   @Value("${app.rotate-admin-password:false}")
   boolean rotateAdminPassword;
 
-  @Value("${app.base-url}")
-  String baseUrl;
-
   @Value("${app.production}")
   boolean production;
 
@@ -61,9 +58,6 @@ public class AuthController implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) {
-    if (production && (!baseUrl.startsWith("https://") || baseUrl.contains("onrender.com")))
-      throw new IllegalStateException(
-          "Set APP_BASE_URL to your HTTPS custom domain before production launch.");
     if (!adminEmail.isBlank() && !adminPassword.isBlank()) {
       if (!adminEmail.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
           || adminPassword.length() < 12
