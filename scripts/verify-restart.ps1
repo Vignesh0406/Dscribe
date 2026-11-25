@@ -7,6 +7,8 @@ if (!(Test-Path -LiteralPath $jar)) { throw 'Build the Java package before runni
 $runId = [guid]::NewGuid().ToString('N')
 $env:PORT = "$Port"
 $env:DB_URL = "jdbc:h2:file:./data/restart-$runId;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;WRITE_DELAY=0"
+$env:DB_USERNAME = 'sa'
+$env:DB_PASSWORD = ''
 $env:ADMIN_EMAIL = "restart-$runId@example.test"
 $env:ADMIN_PASSWORD = [guid]::NewGuid().ToString()
 $origin = "http://localhost:$Port"

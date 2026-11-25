@@ -7,6 +7,21 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: admissions_test
+          MYSQL_ROOT_HOST: "%"
+          # Ephemeral CI-only password derived at runtime, never a production secret.
+          MYSQL_ROOT_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -30,3 +45,9 @@ jobs:
           mkdir -p backend/src/main/resources/static
           cp -R frontend/dist/. backend/src/main/resources/static/
           mvn -B -f backend/pom.xml verify
+      - name: Verify the same API against real MySQL
+        env:
+          TEST_DB_URL: jdbc:mysql://127.0.0.1:3306/admissions_test?sslMode=DISABLED&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
+          TEST_DB_USERNAME: root
+          TEST_DB_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: mvn -B -f backend/pom.xml test

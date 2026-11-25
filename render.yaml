@@ -3,7 +3,7 @@ services:
   - type: web
     name: dscribe-admissions
     runtime: docker
-    plan: 0.5c-512mb
+    plan: free
     region: singapore
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
@@ -12,35 +12,20 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: production
       - key: DB_HOST
-        fromDatabase:
-          name: admissions-db
-          property: host
+        sync: false
       - key: DB_PORT
-        fromDatabase:
-          name: admissions-db
-          property: port
+        sync: false
       - key: DB_NAME
-        fromDatabase:
-          name: admissions-db
-          property: database
+        sync: false
       - key: DB_USERNAME
-        fromDatabase:
-          name: admissions-db
-          property: user
+        sync: false
       - key: DB_PASSWORD
-        fromDatabase:
-          name: admissions-db
-          property: password
+        sync: false
+      - key: DB_SSL_MODE
+        value: VERIFY_IDENTITY
       - key: APP_BASE_URL
         sync: false
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
-databases:
-  - name: admissions-db
-    databaseName: admissions
-    user: admissions
-    plan: 0.1c-256mb
-    region: singapore
-    ipAllowList: []

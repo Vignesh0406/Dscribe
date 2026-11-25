@@ -17,7 +17,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(
     properties = {
-      "spring.datasource.url=jdbc:h2:mem:tests;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1",
+      "spring.datasource.url=${TEST_DB_URL:jdbc:h2:mem:tests;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1}",
+      "spring.datasource.username=${TEST_DB_USERNAME:sa}",
+      "spring.datasource.password=${TEST_DB_PASSWORD:}",
       "app.admin-email=staff@example.test",
       "app.admin-password=test-password-12345"
     })

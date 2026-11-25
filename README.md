@@ -6,13 +6,13 @@ A staff workspace for adding patients, searching and filtering admissions, updat
 
 - **Public repository**: [Vignesh0406/Dscribe](https://github.com/Vignesh0406/Dscribe).
 - **Live application**: Pending Render deployment and custom-domain verification.
-- **Hosting target**: Render Docker web service and managed PostgreSQL.
+- **Hosting target**: Render Docker web service connected to a hosted MySQL database.
 
 ## Tech stack
 
 - **Frontend**: React 19, Vite, CSS, native HTML dialogs, Vitest.
 - **Backend**: Java 17, Spring Boot 3.5, Spring Security, JDBC, Jakarta Validation.
-- **Database**: File-backed H2 for local development; PostgreSQL on Render. Flyway runs versioned migrations automatically.
+- **Database**: MySQL 8.0.16 or newer for local development and deployment. H2 is used only for isolated automated tests and the portable restart smoke test. Flyway selects database-specific migrations automatically.
 - **Deployment**: Multi-stage Docker image. Node is used only to build React assets, never as the backend. Java serves the frontend and API from one origin.
 
 ## Features
@@ -51,20 +51,41 @@ Sign-in is an additional staff-access safeguard, not an assignment requirement. 
 
 ## Run locally
 
-**Prerequisites:** Java 17, Maven 3.6.3 or newer, Node 22.16 or newer, and npm. PostgreSQL is optional for local development. Commands below use PowerShell from the repository root. On Windows, `npm.cmd` avoids execution-policy issues with npm's PowerShell shim.
+**Prerequisites:** Java 17, Maven 3.6.3 or newer, Node 22.16 or newer, npm, and a running MySQL 8.0.16+ server. Commands below use PowerShell from the repository root. On Windows, `npm.cmd` avoids execution-policy issues with npm's PowerShell shim.
 
-### 1. Start Java
+### 1. Configure MySQL and start Java
+
+Create a **new, dedicated database** in MySQL Workbench or the MySQL console using an account authorized to create databases. Do not point Flyway at an unrelated existing application's database.
+
+```sql
+CREATE DATABASE admissions
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+```
+
+Use a database account authorized to create and update tables in that database. For production, use a dedicated application user rather than root.
+
+The helper below prompts for your MySQL username/password and initial staff credentials. Passwords are entered invisibly and are not written to source files or command-line arguments:
 
 ```powershell
-$env:ADMIN_EMAIL = 'your-staff-email@example.com'
-$securePassword = Read-Host 'Initial staff password (12 to 128 characters)' -AsSecureString
-$env:ADMIN_PASSWORD = [System.Net.NetworkCredential]::new('', $securePassword).Password
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-mysql.ps1
+```
+
+For a different server or database:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-mysql.ps1 -DatabaseHost localhost -DatabasePort 3306 -DatabaseName admissions
+```
+
+Alternatively, set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in your terminal, then run:
+
+```powershell
 mvn.cmd -f .\backend\pom.xml spring-boot:run
 ```
 
-The account is created only if its email does not already exist. Changing the bootstrap password does not overwrite an existing account. To rotate an existing password, set `ROTATE_ADMIN_PASSWORD=true` together with that account's `ADMIN_EMAIL` and a new `ADMIN_PASSWORD`, restart once, then remove the rotation flag and password from the environment. Existing sessions are invalidated on their next request. No default credentials are shipped.
+The API listens at `http://localhost:8080`. Patient and staff data are saved in MySQL, not in the Java process or frontend. Flyway creates the application tables; it does not create the database or migrate an unrelated schema. `.\.env.example` lists variable names only; it is not automatically loaded.
 
-The API listens at `http://localhost:8080`. Local records are saved to the H2 file under `.\data` in the Java process's working directory. Start Java from the same directory on subsequent runs to use the same database. Never commit the database.
+The staff account is created only if its email does not already exist. To rotate an existing staff password, set `ROTATE_ADMIN_PASSWORD=true` together with that account's `ADMIN_EMAIL` and a new `ADMIN_PASSWORD`, restart once, then remove the rotation flag and password. Existing sessions are invalidated on their next request. No default staff credentials are shipped.
 
 ### 2. Start React in a second terminal
 
@@ -97,7 +118,7 @@ npm.cmd --prefix .\frontend test
 npm.cmd --prefix .\frontend run build
 ```
 
-Backend integration tests exercise CRUD, combined filters, literal wildcard search, invalid names, age bounds, fractional ages, dropdown tampering, missing fields, future and malformed dates, edit validation, authorization, CSRF, missing records, and login/session protections.
+Backend integration tests exercise CRUD, combined filters, literal wildcard search, invalid names, age bounds, fractional ages, dropdown tampering, missing fields, future and malformed dates, edit validation, authorization, CSRF, missing records, and login/session protections. GitHub CI runs the same backend suite against both H2 and a real MySQL 8 service; CI credentials exist only for that temporary test database.
 
 An additional Windows smoke test starts an isolated Java server, saves a synthetic patient, abruptly terminates Java immediately after the acknowledged write, restarts it against the same file database, verifies the patient, and deletes the record:
 
@@ -105,7 +126,7 @@ An additional Windows smoke test starts an isolated Java server, saves a synthet
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-restart.ps1
 ```
 
-It uses port 8082 by default and a unique ignored local database. The local H2 configuration uses `WRITE_DELAY=0` so acknowledged changes are flushed without the default delayed-write window. PostgreSQL provides production persistence independently.
+It uses port 8082 by default and a unique ignored local database. The local H2 configuration uses `WRITE_DELAY=0` so acknowledged changes are flushed without the default delayed-write window. This portable smoke test uses H2, not your MySQL database. MySQL persistence and migrations must also be verified against your actual server; the CI integration suite provides real-MySQL API coverage.
 
 ## Screenshots
 
@@ -125,19 +146,25 @@ Actual local application screenshots at desktop, tablet, and mobile widths. All 
 
 ## Render deployment
 
-**Do not launch until your custom domain is connected and verified.** No deployment has been performed as part of this local implementation. The blueprint specifies paid resources; confirm current costs in Render before creating them.
+**Do not launch until your custom domain is connected and verified.** No deployment has been performed as part of this local implementation. The blueprint uses a free Render web service and expects an existing, reachable MySQL server. Database hosting may have a separate cost; confirm it before provisioning anything. Free Render web services can sleep when inactive.
 
 1. Create a public GitHub repository and push this project. Review staged changes to ensure there are no secrets or local databases.
-2. In Render, create a Blueprint from the repository using `.\render.yaml`. Review the configured paid web-service and database plans before provisioning. No email provider is required.
-3. Set the prompted `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `APP_BASE_URL`. Use the final HTTPS custom-domain origin, with no trailing slash. Database host, port, name, user, and password are referenced from the managed database, not stored in Git.
+2. In Render, create a Blueprint from the repository using `.\render.yaml`. The web-service blueprint prompts for an external MySQL connection. No database or paid service is provisioned automatically. No email provider is required.
+3. Set the prompted `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `APP_BASE_URL`. Use the final HTTPS custom-domain origin, with no trailing slash. Also set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, and `DB_PASSWORD` from your hosted MySQL provider. Store them in Render, never in Git. `DB_SSL_MODE` defaults to `VERIFY_IDENTITY` in production; use a valid server certificate and your provider's trusted CA configuration. A database running on your laptop at `localhost` cannot be reached from Render.
 4. Add your domain in the Render service's Custom Domains settings. Configure the DNS records shown by Render. Wait for DNS verification and the HTTPS certificate before considering the application launched. The production startup check rejects localhost-style HTTP URLs and Render's default service domain, but it does not verify DNS ownership by itself.
 5. Keep automatic deploys off until launch readiness is verified. Render may create an initial service deployment while resources are provisioned; treat it as staging and do not share it as the live submission link. If you require absolutely no public staging endpoint, arrange domain settings and deployment access with Render before provisioning.
 6. Check `/api/health`, staff login, all patient actions, privacy/terms pages, and favicon on the custom domain. Create only clearly fictional test records, then remove them.
-7. Create one fictional record, restart the Render service, and verify the record remains. PostgreSQL must be configured in production; do not use ephemeral container H2 storage.
-8. Remove `ADMIN_PASSWORD` from Render after successful initial provisioning. The hashed account is stored in PostgreSQL. Keep the database credentials in Render.
+7. Create one fictional record, restart the Render service, and verify the record remains. MySQL must be configured in production; do not use ephemeral container H2 storage.
+8. Remove `ADMIN_PASSWORD` from Render after successful initial provisioning. The hashed account is stored in MySQL. Keep the database credentials in Render.
 9. Replace the pending repository/live fields at the top of this document. Recheck desktop, tablet, and mobile screenshots against the deployed app.
 
 See [Render Docker deployment](https://render.com/docs/docker), [Blueprint reference](https://render.com/docs/blueprint-spec), and [custom domains](https://render.com/docs/custom-domains).
+
+### MySQL hosting choices
+
+- **Existing hosted MySQL**: Use its network hostname, database name, port, and dedicated credentials. Configure the provider's firewall to allow the Render service and require verified TLS.
+- **MySQL on this computer**: Use it for local development only. Do not expose port 3306 or forward your router merely to make this submission work.
+- **MySQL hosted on Render**: Render documents a self-hosted MySQL private service with a persistent disk, not managed MySQL. This requires separately approved resources and database administration. The current blueprint deliberately does not create that paid service. See [Render's MySQL guide](https://render.com/docs/deploy-mysql).
 
 ## Security and scope
 
@@ -150,7 +177,7 @@ See [Render Docker deployment](https://render.com/docs/docker), [Blueprint refer
 - The application has a same-origin content security policy and does not permit cross-origin embedding.
 - This internship project is **not certified for real patient information**. It lacks a clinical audit log, granular staff permissions, and a hospital-specific retention/consent policy. Use fictional records for review.
 - Privacy and terms content describes the actual demo behavior. Before clinical use, the operator must supply its identity, contact details, retention rules, and approved legal text.
-- The Render runtime, PostgreSQL integration, custom-domain DNS, and TLS require environment-specific verification. Do not represent them as verified before testing them.
+- The Render runtime, your MySQL connection, custom-domain DNS, and TLS require environment-specific verification. Do not represent them as verified before testing them.
 
 ## Code walkthrough
 
@@ -160,7 +187,7 @@ See [Render Docker deployment](https://render.com/docs/docker), [Blueprint refer
 - **`.\backend\src\main\java\in\dscribe\admissions\PatientController.java`**: Patient validation, filters, and CRUD using JDBC.
 - **`.\backend\src\main\java\in\dscribe\admissions\AuthController.java`**: Initial account provisioning, login, logout, and administrator password rotation.
 - **`.\backend\src\main\java\in\dscribe\admissions\SecurityConfig.java`**: Session security, authorization, CSRF, and security headers.
-- **`.\backend\src\main\resources\db\migration\V1__initial.sql`**: Durable schema.
+- **`.\backend\src\main\resources\db\migration\mysql\V1__initial.sql`**: MySQL durable schema. The H2-only migrations retain the previous local test schema and checksums.
 - **`.\render.yaml`** and **`.\Dockerfile`**: Render resources and the combined React/Java image.
 
 ## Submission
