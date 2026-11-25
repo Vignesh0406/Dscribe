@@ -19,15 +19,28 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class SecurityConfig {
   @Bean
   org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer
-      strictNumbers() {
+      strictInputTypes() {
     return builder ->
         builder.postConfigurer(
-            mapper ->
-                mapper
-                    .coercionConfigFor(com.fasterxml.jackson.databind.type.LogicalType.Integer)
-                    .setCoercion(
-                        com.fasterxml.jackson.databind.cfg.CoercionInputShape.String,
-                        com.fasterxml.jackson.databind.cfg.CoercionAction.Fail));
+            mapper -> {
+              mapper
+                  .coercionConfigFor(com.fasterxml.jackson.databind.type.LogicalType.Integer)
+                  .setCoercion(
+                      com.fasterxml.jackson.databind.cfg.CoercionInputShape.String,
+                      com.fasterxml.jackson.databind.cfg.CoercionAction.Fail);
+              // Text fields must not silently turn JSON booleans or numbers into names.
+              var textCoercion =
+                  mapper.coercionConfigFor(com.fasterxml.jackson.databind.type.LogicalType.Textual);
+              for (var shape :
+                  new com.fasterxml.jackson.databind.cfg.CoercionInputShape[] {
+                    com.fasterxml.jackson.databind.cfg.CoercionInputShape.Boolean,
+                    com.fasterxml.jackson.databind.cfg.CoercionInputShape.Integer,
+                    com.fasterxml.jackson.databind.cfg.CoercionInputShape.Float
+                  }) {
+                textCoercion.setCoercion(
+                    shape, com.fasterxml.jackson.databind.cfg.CoercionAction.Fail);
+              }
+            });
   }
 
   @Bean

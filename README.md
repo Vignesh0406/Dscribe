@@ -27,6 +27,28 @@ A staff workspace for adding patients, searching and filtering admissions, updat
 - Staff email/password login and logout. No public signup or email delivery.
 - Responsive workspace, favicon, privacy policy, and terms pages. No analytics, fabricated records, reviews, counters, badges, or external photos.
 
+## Assignment checklist
+
+| Mandatory requirement | Current status |
+| --- | --- |
+| Name, age, gender, ward, department, doctor, admission date, status | Implemented |
+| Add and list all patients | Implemented and locally verified |
+| Combined ward, department, doctor filters | Implemented and locally verified |
+| Search by patient name | Implemented and locally verified |
+| Edit a patient | Implemented and locally verified |
+| Delete with confirmation | Implemented and locally verified |
+| Mark a patient discharged | Implemented and locally verified |
+| Mobile, tablet, desktop layout | Browser verified; screenshots below |
+| Frontend and backend validation with clear API errors | Automated tests pass |
+| React frontend and Java backend, not a Node backend | Implemented |
+| Data survives server restart | Abrupt-restart persistence test passes locally |
+| Public GitHub repository | Available above |
+| README stack, run instructions, screenshots | Included |
+| Connected frontend/backend live link | **Pending Render deployment and custom domain** |
+| Submission email with full name and both links | **Pending live link and applicant full name** |
+
+Sign-in is an additional staff-access safeguard, not an assignment requirement. Reviewers will need credentials supplied privately, outside the public repository.
+
 ## Run locally
 
 **Prerequisites:** Java 17, Maven 3.6.3 or newer, Node 22.16 or newer, and npm. PostgreSQL is optional for local development. Commands below use PowerShell from the repository root. On Windows, `npm.cmd` avoids execution-policy issues with npm's PowerShell shim.
@@ -91,15 +113,15 @@ Actual local application screenshots at desktop, tablet, and mobile widths. All 
 
 ### Desktop
 
-<img src=".\docs\screenshots\desktop.png" alt="Desktop patient register with search, filters, and record actions" width="100%">
+<img src="https://raw.githubusercontent.com/Vignesh0406/Dscribe/main/docs/screenshots/desktop.png" alt="Desktop patient register with search, filters, and record actions" width="100%">
 
 ### Tablet
 
-<img src=".\docs\screenshots\tablet.png" alt="Tablet patient register" width="768">
+<img src="https://raw.githubusercontent.com/Vignesh0406/Dscribe/main/docs/screenshots/tablet.png" alt="Tablet patient register" width="768">
 
 ### Mobile
 
-<img src=".\docs\screenshots\mobile.png" alt="Mobile patient register with stacked filters" width="390">
+<img src="https://raw.githubusercontent.com/Vignesh0406/Dscribe/main/docs/screenshots/mobile.png" alt="Mobile patient register with stacked filters" width="390">
 
 ## Render deployment
 

@@ -287,6 +287,22 @@ class AdmissionIntegrationTest {
   }
 
   @Test
+  void textFieldsRejectWrongJsonTypesInsteadOfCoercingThemToNames() throws Exception {
+    for (Object wrongName : List.of(true, false, 123, 12.5)) {
+      var input = patient();
+      input.put("name", wrongName);
+      mvc.perform(
+              post("/api/patients")
+                  .session(session)
+                  .with(csrf())
+                  .contentType("application/json")
+                  .content(json.writeValueAsBytes(input)))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.message").isString());
+    }
+  }
+
+  @Test
   void incorrectPasswordIsRejectedClearly() throws Exception {
     mvc.perform(
             post("/api/auth/login")
